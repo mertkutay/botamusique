@@ -1,5 +1,25 @@
 import youtube_dl
 import variables as var
+from googleapiclient.discovery import build
+
+
+def search_youtube_url(query):
+    google_api_key = var.config.get('secrets', 'google_api_key')
+    if not google_api_key:
+        raise Exception('Google API credentials are not provided')
+
+    youtube = build('youtube', 'v3', developerKey=google_api_key)
+
+    search_response = youtube.search().list(
+        q=query,
+        part='id,snippet',
+        type='video',
+        maxResults=1
+    ).execute()
+
+    if len(search_response['items']) > 0:
+        video_id = search_response['items'][0]['id']['videoId']
+        return 'https://www.youtube.com/watch?v=' + video_id
 
 
 def get_url_info(index=-1):

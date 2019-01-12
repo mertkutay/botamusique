@@ -1,7 +1,9 @@
 opuslib==2.0.0
 protobuf==3.4.0
-flask
-youtube-dl
-python-magic
-Pillow
-mutagen
+flask==1.0.2
+youtube-dl==2019.1.10
+python-magic==0.4.15
+Pillow==5.4.1
+mutagen==1.42.0
+google-api-python-client==1.7.7
+requests==2.19.1

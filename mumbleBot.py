@@ -162,7 +162,14 @@ class MumbleBot:
                     self.send_msg(var.config.get('strings', 'bad_file'), text)
                 self.async_download_next()
 
-            elif command == var.config.get('command', 'play_url') and parameter:
+            elif command in [var.config.get('command', 'play_url'),
+                             var.config.get('command', 'play_search')] and parameter:
+
+                if command == var.config.get('command', 'play_search'):
+                    parameter = media.url.search_youtube_url(parameter)
+                    if parameter is None:
+                        self.send_msg(var.config.get('strings', 'unable_download'), text)
+                        return
 
                 music = {'type': 'url',
                          'url': self.get_url_from_input(parameter),
