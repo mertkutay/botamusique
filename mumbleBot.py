@@ -347,6 +347,9 @@ class MumbleBot:
                 self.send_msg(reply, text)
 
             elif command == var.config.get('command', 'skip'):
+                if user != var.playlist[0]['user']:
+                    return
+
                 if parameter is not None and parameter.isdigit() and int(parameter) > 0:
                     if int(parameter) < len(var.playlist):
                         removed = var.playlist.pop(int(parameter))

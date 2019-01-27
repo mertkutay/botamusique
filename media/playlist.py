@@ -62,7 +62,7 @@ def get_spotify_playlist(url, start_index=1, user=""):
 
 
 def get_playlist_info(url, start_index=1, user=""):
-    if url.startwith('https://open.spotify.com'):
+    if url.startswith('https://open.spotify.com'):
         return get_spotify_playlist(url, start_index=1, user="")
 
     ydl_opts = {
