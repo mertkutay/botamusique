@@ -35,8 +35,6 @@ class MumbleBot:
         if db.has_option('bot', 'volume'):
             self.volume = var.db.getfloat('bot', 'volume')
 
-        self.channel = args.channel
-
         FORMAT = '%(asctime)s: %(message)s'
         if args.verbose:
             logging.basicConfig(format=FORMAT, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
@@ -78,6 +76,13 @@ class MumbleBot:
             password = args.password
         else:
             password = var.config.get("server", "password")
+
+        if args.channel:
+            channel = args.channel
+        else:
+            channel = var.config.get("server", "channel")
+
+        self.channel = channel.strip()
 
         if args.user:
             self.username = args.user
