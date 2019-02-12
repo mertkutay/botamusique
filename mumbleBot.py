@@ -293,7 +293,7 @@ class MumbleBot:
                         need_restart = True
                     self.mumble.users[text.actor].send_message('<br>'.join(messages))
                     if need_restart:
-                        os.execv(__file__, sys.argv)
+                        os.execv(sys.executable, ['python'] + sys.argv)
                 else:
                     self.mumble.users[text.actor].send_message(var.config.get('strings', 'not_admin'))
 
