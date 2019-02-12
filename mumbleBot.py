@@ -21,6 +21,7 @@ from PIL import Image
 from io import BytesIO
 from mutagen.easyid3 import EasyID3
 import re
+from ffmpeg_normalize import MediaFile, FFmpegNormalize
 import media.url
 import media.file
 import media.playlist
@@ -293,6 +294,7 @@ class MumbleBot:
                         need_restart = True
                     self.mumble.users[text.actor].send_message('<br>'.join(messages))
                     if need_restart:
+                        sp.check_output([var.config.get('bot', 'pip3_path'), 'install', '-r', 'requirements.txt']).decode()
                         os.execv(__file__, sys.argv)
                 else:
                     self.mumble.users[text.actor].send_message(var.config.get('strings', 'not_admin'))
@@ -469,6 +471,12 @@ class MumbleBot:
         self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
         self.is_playing = True
 
+    @staticmethod
+    def normalize_music(file_name):
+        normalizer = FFmpegNormalize(audio_codec='libmp3lame', audio_bitrate='320k')
+        media_file = MediaFile(ffmpeg_normalize=normalizer, input_file=file_name, output_file=file_name)
+        media_file.run_normalization()
+
     def download_music(self, index):
         if var.playlist[index]['type'] == 'url' and var.playlist[index]['ready'] == "validation":
             if media.url.get_url_info(index=index):
@@ -526,6 +534,7 @@ class MumbleBot:
                     except youtube_dl.utils.DownloadError:
                         pass
                     else:
+                        self.normalize_music(mp3)
                         break
             return
 
