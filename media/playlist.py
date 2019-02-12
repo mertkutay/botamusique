@@ -44,8 +44,9 @@ def get_spotify_playlist(url, start_index=0, user=""):
         refresh_spotify_token()
         return get_spotify_playlist(url, start_index=start_index, user=user)
 
-    tracks = res['tracks']['items'][start_index: start_index + var.config.getint('bot', 'max_track_playlist')]
+    tracks = res['tracks']['items']
     random.shuffle(tracks)
+    tracks = tracks[start_index: start_index + var.config.getint('bot', 'max_track_playlist')]
 
     for i, item in enumerate(tracks):
         title = '{} - {}'.format(item['track']['artists'][0]['name'],
