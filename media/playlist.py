@@ -31,7 +31,7 @@ def refresh_spotify_token():
     var.config.set('secrets', 'spotify_access_token', access_token)
 
 
-def get_spotify_playlist(url, start_index=1, user=""):
+def get_spotify_playlist(url, start_index=0, user=""):
     playlist_id = re.search(r'playlist/(\w+)\??', url).group(1)
 
     access_token = var.config.get('secrets', 'spotify_access_token')
@@ -41,29 +41,30 @@ def get_spotify_playlist(url, start_index=1, user=""):
     # TODO: differentiate auth error from id error
     if 'error' in res:
         refresh_spotify_token()
-        return get_spotify_playlist(url, start_index=1, user="")
+        return get_spotify_playlist(url, start_index=start_index, user=user)
 
-    for item in res['tracks']['items']:
-        title = '{} - {} ft. {}'.format(item['track']['artists'][0]['name'],
-                                        item['track']['name'],
-                                        ', '.join([artist['name'] for artist in item['track']['artists'][1:]]))
+    for i in range(start_index, start_index + var.config.getint('bot', 'max_track_playlist')):
+        item = res['tracks']['items'][i]
+        title = '{} - {}'.format(item['track']['artists'][0]['name'],
+                                 item['track']['name'])
+        if len(item['track']['artists']) > 1:
+            title += ' ft. {}'.format(', '.join([artist['name'] for artist in item['track']['artists'][1:]]))
 
-        for j in range(start_index, start_index + var.config.getint('bot', 'max_track_playlist')):
-            music = {'type': 'url',
-                     'title': title,
-                     'url': media.url.search_youtube_url(title),
-                     'user': user,
-                     'from_playlist': True,
-                     'playlist_title': res['name'],
-                     'playlist_url': url,
-                     'ready': 'validation'}
-            var.playlist.append(music)
+        music = {'type': 'url',
+                 'title': title,
+                 'url': media.url.search_youtube_url(title),
+                 'user': user,
+                 'from_playlist': True,
+                 'playlist_title': res['name'],
+                 'playlist_url': url,
+                 'ready': 'no' if i == start_index else 'validation'}
+        var.playlist.append(music)
     return True
 
 
-def get_playlist_info(url, start_index=1, user=""):
+def get_playlist_info(url, start_index=0, user=""):
     if url.startswith('https://open.spotify.com'):
-        return get_spotify_playlist(url, start_index=1, user="")
+        return get_spotify_playlist(url, start_index=start_index, user=user)
 
     ydl_opts = {
         'extract_flat': 'in_playlist'

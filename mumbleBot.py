@@ -207,9 +207,9 @@ class MumbleBot:
                                      'user': user}
                             var.playlist.append(music)
                         else:
-                            msg = var.config.get('strings', 'multiple_matches') + '<br />'
-                            msg += '<br />'.join(matches)
-                            self.send_msg(msg, text)
+                            messages = var.config.get('strings', 'multiple_matches') + '<br />'
+                            messages += '<br />'.join(matches)
+                            self.send_msg(messages, text)
                 else:
                     self.send_msg(var.config.get('strings', 'bad_file'), text)
                 self.async_download_next()
@@ -218,7 +218,7 @@ class MumbleBot:
                              var.config.get('command', 'play_search')] and parameter:
                 if command == var.config.get('command', 'play_search'):
                     parameter = media.url.search_youtube_url(parameter)
-                    if parameter is None:
+                    if not parameter:
                         self.send_msg(var.config.get('strings', 'unable_download'), text)
                         return
 
@@ -246,7 +246,7 @@ class MumbleBot:
                     self.send_msg(var.config.get('strings', 'unable_download'), text)
 
             elif command == var.config.get('command', 'play_playlist') and parameter:
-                offset = 1
+                offset = 0
                 try:
                     offset = int(parameter.split(" ")[-1])
                 except ValueError:
@@ -280,16 +280,20 @@ class MumbleBot:
                 if self.is_admin(user):
                     self.mumble.users[text.actor].send_message("Starting the update")
                     tp = sp.check_output([var.config.get('bot', 'pip3_path'), 'install', '--upgrade', 'youtube-dl']).decode()
-                    msg = ""
+                    messages = []
+                    need_restart = False
                     if "Requirement already up-to-date" in tp:
-                        msg += "Youtube-dl is up-to-date"
+                        messages.append("Youtube-dl is up-to-date")
                     else:
-                        msg += "Update done : " + tp.split('Successfully installed')[1]
-                    if 'up-to-date' not in sp.check_output(['/usr/bin/env', 'git', 'pull']).decode():
-                        msg += "<br /> I'm up-to-date"
+                        messages.append("Update done : " + tp.split('Successfully installed')[1])
+                    if 'up-to-date' not in sp.check_output(['git', 'pull']).decode():
+                        messages.append("I'm up-to-date")
                     else:
-                        msg += "<br /> I have available updates, need to do it manually"
-                    self.mumble.users[text.actor].send_message(msg)
+                        messages.append("Updated source code, restarting..")
+                        need_restart = True
+                    self.mumble.users[text.actor].send_message('<br>'.join(messages))
+                    if need_restart:
+                        os.execv(__file__, sys.argv)
                 else:
                     self.mumble.users[text.actor].send_message(var.config.get('strings', 'not_admin'))
 
@@ -342,21 +346,27 @@ class MumbleBot:
                 self.send_msg(reply, text)
 
             elif command == var.config.get('command', 'skip'):
-                if user != var.playlist[0]['user']:
+                if parameter == '':
+                    parameter = 0
+                elif parameter.isdigit():
+                    parameter = int(parameter)
+                else:
+                    self.send_msg(var.config.get('strings', 'no_possible'), text)
                     return
 
-                if parameter is not None and parameter.isdigit() and int(parameter) > 0:
-                    if int(parameter) < len(var.playlist):
-                        removed = var.playlist.pop(int(parameter))
-                        self.send_msg(var.config.get('strings', 'removing_item') % (removed['title'] if 'title' in removed else removed['url']), text)
+                if len(var.playlist) > 0:
+                    removed = var.playlist.pop(parameter)
+                    removed = removed.get('title', removed['url'])
+                    self.send_msg(var.config.get('strings', 'removing_item') % removed, text)
+
+                    if len(var.playlist) == 0:
+                        self.stop()
                     else:
-                        self.send_msg(var.config.get('strings', 'no_possible'), text)
-                elif self.next():
-                    self.launch_music()
-                    self.async_download_next()
-                else:
+                        self.launch_music()
+                        self.async_download_next()
+
+                if len(var.playlist) == 0:
                     self.send_msg(var.config.get('strings', 'queue_empty'), text)
-                    self.stop()
 
             elif command == var.config.get('command', 'list'):
                 folder_path = var.config.get('bot', 'music_folder')
@@ -369,15 +379,15 @@ class MumbleBot:
 
             elif command == var.config.get('command', 'queue'):
                 if len(var.playlist) <= 1:
-                    msg = var.config.get('strings', 'queue_empty')
+                    messages = var.config.get('strings', 'queue_empty')
                 else:
-                    msg = var.config.get('strings', 'queue_contents') + '<br />'
+                    messages = var.config.get('strings', 'queue_contents') + '<br />'
                     i = 1
                     for value in var.playlist[1:]:
-                        msg += '[{}] ({}) {}<br />'.format(i, value['type'], value['title'] if 'title' in value else value['url'])
+                        messages += '[{}] ({}) {}<br />'.format(i, value['type'], value['title'] if 'title' in value else value['url'])
                         i += 1
 
-                self.send_msg(msg, text)
+                self.send_msg(messages, text)
 
             elif command == var.config.get('command', 'repeat'):
                 var.playlist.append(var.playlist[0])

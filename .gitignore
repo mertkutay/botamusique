@@ -110,3 +110,7 @@ configuration.ini
 
 # PyCharm
 .idea/
+
+tmp/
+music_folder/
+*.mp3
