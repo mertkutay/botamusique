@@ -36,8 +36,6 @@ class MumbleBot:
         if db.has_option('bot', 'volume'):
             self.volume = var.db.getfloat('bot', 'volume')
 
-        self.channel = args.channel
-
         FORMAT = '%(asctime)s: %(message)s'
         if args.verbose:
             logging.basicConfig(format=FORMAT, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
@@ -79,6 +77,13 @@ class MumbleBot:
             password = args.password
         else:
             password = var.config.get("server", "password")
+
+        if args.channel:
+            channel = args.channel
+        else:
+            channel = var.config.get("server", "channel")
+
+        self.channel = channel.strip()
 
         if args.user:
             self.username = args.user
@@ -287,7 +292,7 @@ class MumbleBot:
                         messages.append("Youtube-dl is up-to-date")
                     else:
                         messages.append("Update done : " + tp.split('Successfully installed')[1])
-                    if 'up-to-date' not in sp.check_output(['git', 'pull']).decode():
+                    if 'up to date' in sp.check_output(['git', 'pull']).decode():
                         messages.append("I'm up-to-date")
                     else:
                         messages.append("Updated source code, restarting..")
@@ -295,7 +300,7 @@ class MumbleBot:
                     self.mumble.users[text.actor].send_message('<br>'.join(messages))
                     if need_restart:
                         sp.check_output([var.config.get('bot', 'pip3_path'), 'install', '-r', 'requirements.txt']).decode()
-                        os.execv(__file__, sys.argv)
+                        os.execv(sys.executable, ['python'] + sys.argv)
                 else:
                     self.mumble.users[text.actor].send_message(var.config.get('strings', 'not_admin'))
 

@@ -1,4 +1,5 @@
 import re
+import random
 import base64
 import requests
 import youtube_dl
@@ -43,8 +44,11 @@ def get_spotify_playlist(url, start_index=0, user=""):
         refresh_spotify_token()
         return get_spotify_playlist(url, start_index=start_index, user=user)
 
-    for i in range(start_index, start_index + var.config.getint('bot', 'max_track_playlist')):
-        item = res['tracks']['items'][i]
+    tracks = res['tracks']['items']
+    random.shuffle(tracks)
+    tracks = tracks[start_index: start_index + var.config.getint('bot', 'max_track_playlist')]
+
+    for i, item in enumerate(tracks):
         title = '{} - {}'.format(item['track']['artists'][0]['name'],
                                  item['track']['name'])
         if len(item['track']['artists']) > 1:
