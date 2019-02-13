@@ -1,6 +1,20 @@
 import youtube_dl
+import media
 import variables as var
 from googleapiclient.discovery import build
+
+
+def get_youtube_recommendation(url):
+    video_id = url.split('=')[-1]
+    google_api_key = var.config.get('secrets', 'google_api_key')
+    if not google_api_key:
+        raise Exception('Google API credentials are not provided')
+
+    youtube = build('youtube', 'v3', developerKey=google_api_key)
+    response = youtube.search().list(relatedToVideoId=video_id, part='snippet', type='video').execute()
+    if len(response['items']) > 0:
+        video_id = response['items'][0]['id']['videoId']
+        return 'https://www.youtube.com/watch?v=' + video_id
 
 
 def search_youtube_url(query):

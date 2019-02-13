@@ -259,6 +259,38 @@ class MumbleBot:
                 if media.playlist.get_playlist_info(url=self.get_url_from_input(parameter), start_index=offset, user=user):
                     self.async_download_next()
 
+            elif command == var.config.get('command', 'play_autoplay') and parameter:
+                parameter = media.url.search_youtube_url(parameter)
+                music = {'type': 'url',
+                         'url': self.get_url_from_input(parameter),
+                         'user': user,
+                         'ready': 'validation'}
+                var.playlist.append(music)
+
+                for i in range(var.config.getint('bot', 'max_track_playlist')):
+                    if media.url.get_url_info():
+                        if var.playlist[-1]['duration'] > var.config.getint('bot', 'max_track_duration'):
+                            var.playlist.pop()
+                            self.send_msg(var.config.get('strings', 'too_long'), text)
+                        else:
+                            for i in var.db.options("url_ban"):
+                                print(i, ' -> ', {var.playlist[-1]["url"]})
+                                if var.playlist[-1]['url'] == i:
+                                    self.mumble.users[text.actor].send_message(var.config.get('strings', 'url_ban'))
+                                    var.playlist.pop()
+                                    return
+                            var.playlist[-1]['ready'] = "no"
+                            self.async_download_next()
+                            parameter = media.url.get_youtube_recommendation(parameter)
+                            music = {'type': 'url',
+                                     'url': self.get_url_from_input(parameter),
+                                     'user': user,
+                                     'ready': 'validation'}
+                            var.playlist.append(music)
+                    else:
+                        var.playlist.pop()
+                        self.send_msg(var.config.get('strings', 'unable_download'), text)
+
             elif command == var.config.get('command', 'play_radio') and parameter:
                 if var.config.has_option('radio', parameter):
                     parameter = var.config.get('radio', parameter)
