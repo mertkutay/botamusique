@@ -532,7 +532,6 @@ class MumbleBot:
                     except youtube_dl.utils.DownloadError:
                         pass
                     else:
-                        self.normalize_music(mp3)
                         break
             return
 
