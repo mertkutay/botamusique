@@ -21,7 +21,6 @@ from PIL import Image
 from io import BytesIO
 from mutagen.easyid3 import EasyID3
 import re
-from ffmpeg_normalize import MediaFile, FFmpegNormalize
 import media.url
 import media.file
 import media.playlist
@@ -471,16 +470,10 @@ class MumbleBot:
         else:
             ffmpeg_debug = "warning"
 
-        command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', uri, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
+        command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', uri, '-filter:a', 'loudnorm', '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
         logging.info("FFmpeg command : " + " ".join(command))
         self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
         self.is_playing = True
-
-    @staticmethod
-    def normalize_music(file_name):
-        normalizer = FFmpegNormalize(audio_codec='libmp3lame', audio_bitrate='320k')
-        media_file = MediaFile(ffmpeg_normalize=normalizer, input_file=file_name, output_file=file_name)
-        media_file.run_normalization()
 
     def download_music(self, index):
         if var.playlist[index]['type'] == 'url' and var.playlist[index]['ready'] == "validation":
