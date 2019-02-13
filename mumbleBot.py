@@ -291,7 +291,7 @@ class MumbleBot:
                         messages.append("Youtube-dl is up-to-date")
                     else:
                         messages.append("Update done : " + tp.split('Successfully installed')[1])
-                    if 'up to date' in sp.check_output(['git', 'pull']).decode():
+                    if 'up to date' in sp.check_output(['/usr/bin/git', 'pull']).decode():
                         messages.append("I'm up-to-date")
                     else:
                         messages.append("Updated source code, restarting..")
